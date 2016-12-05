@@ -51,6 +51,11 @@ class Darwin_Image {
 			DARWIN_IMAGE_VER,
 			true
 			);
+
+		wp_add_inline_script(
+			'jquery-twentytwenty',
+			';(function($){ $(".darwin-image").twentytwenty({default_offset_pct: 0.7}); }(jQuery))'
+			);
 	}
 
 	/**
@@ -65,12 +70,25 @@ class Darwin_Image {
 			'before'      => 0,
 			'after'       => 0,
 			'size'        => 'medium',
-			'orientation' => 'horizontal'
+			'orientation' => 'horizontal' // Only two available - horizontal & vertical
 			), $atts );
 
-		return '<pre>' . print_r( $atts , 1) . '</pre>';
-		// $atts['src_type'] = ( in_array( $atts['src_type'], array('id', 'path') ) ) ? $atts['src_type'] : 'id';
+		if ( 'id' === $atts['type'] ) {
+			$atts['before'] = wp_get_attachment_image_url( absint( $atts['before'] ), $atts['size'] );
+			$atts['after'] = wp_get_attachment_image_url( absint( $atts['after'] ), $atts['size'] );
+		}
 
+		return sprintf(
+			'<div class="darwin-image" data-orientation="%s">'
+				.'<img src="%s" alt="%s">'
+				.'<img src="%s" alt="%s">'
+			.'</div>',
+			esc_attr( $atts['orientation'] ),
+			esc_url( $atts['before'] ),
+			esc_attr_x( 'Before', 'Darwin Before Image', 'darwin-image' ),
+			esc_url( $atts['after'] ),
+			esc_attr_x( 'After', 'Darwin After Image', 'darwin-image' )
+		);
 	}
 
 }
