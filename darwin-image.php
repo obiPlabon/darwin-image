@@ -20,9 +20,60 @@ define( 'DARWIN_IMAGE_URI', plugin_dir_url( __FILE__ ) );
 
 class Darwin_Image {
 
+	protected $tag = 'darwin_image';
+
 	public function __construct() {
 		add_action( 'wp_enqueue_scripts', array($this, 'enqueue_assets') );
-		add_shortcode( 'darwin_image', array($this, 'render') );
+		add_action( 'vc_before_init', array($this, 'vc_inject') );
+
+		add_shortcode( $this->tag, array($this, 'render') );
+	}
+
+	protected function get_image_sizes() {
+		$sizes = get_intermediate_image_sizes();
+		$map = array();
+		for ( $i = 0, $len = count($sizes); $i < $len; $i++ ) {
+			$map[ucwords( str_replace( array('-', '_'), ' ', $sizes[$i] ) )] = $sizes[$i];
+		}
+		return $map;
+	}
+
+	public function vc_inject() {
+		vc_map( array(
+			'name' => esc_html__( 'Darwin Image', 'darwin-image' ),
+			'description' => esc_html__( 'Easily visualize the transition between two image.', 'darwin-image' ),
+			'base' => $this->tag,
+			'params' => array(
+				array(
+					'type' => 'dropdown',
+					'heading' => esc_html__( 'Source Type', 'darwin-image' ),
+					'param_name' => 'type',
+					'value' => array(
+						esc_html__( 'ID', 'darwin-image' ) => 'id',
+						esc_html__( 'Path', 'darwin-image' ) => 'path',
+						),
+					'admin_label' => true
+					),
+				array(
+					'type' => 'dropdown',
+					'heading' => esc_html__( 'Image Size', 'darwin-image' ),
+					'param_name' => 'size',
+					'value' => $this->get_image_sizes(),
+					'admin_label' => true
+					),
+				array(
+					'type' => 'dropdown',
+					'heading' => esc_html__( 'Orientation', 'darwin-image' ),
+					'param_name' => 'orientation',
+					'value' => array(
+						esc_html__( 'Horizontal', 'darwin-image' ) => 'horizontal',
+						esc_html__( 'Vertical', 'darwin-image' ) => 'vertical',
+						),
+					'admin_label' => true
+					),
+				)
+			)
+		);
 	}
 
 	/**
@@ -66,10 +117,10 @@ class Darwin_Image {
 	 */
 	public function render( $atts, $content = null ) {
 		$atts = shortcode_atts( array(
-			'type'        => 'id',
-			'before'      => 0,
-			'after'       => 0,
-			'size'        => 'medium',
+			'type' => 'id',
+			'before' => 0,
+			'after' => 0,
+			'size' => 'medium',
 			'orientation' => 'horizontal' // Only two available - horizontal & vertical
 			), $atts );
 
@@ -85,9 +136,9 @@ class Darwin_Image {
 			.'</div>',
 			esc_attr( $atts['orientation'] ),
 			esc_url( $atts['before'] ),
-			esc_attr_x( 'Before', 'Darwin Before Image', 'darwin-image' ),
+			esc_attr_x( 'Before', 'Darwin before image alt text', 'darwin-image' ),
 			esc_url( $atts['after'] ),
-			esc_attr_x( 'After', 'Darwin After Image', 'darwin-image' )
+			esc_attr_x( 'After', 'Darwin after image alt text', 'darwin-image' )
 		);
 	}
 
